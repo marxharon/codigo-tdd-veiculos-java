@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>br.edu.revenda</groupId>
+    <artifactId>codigo-tdd-veiculos-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Projeto TDD Cadastro de Veiculos (Todos os Passos)</name>
+
+    <modules>
+        <module>passo_0</module>
+        <module>passo_1</module>
+        <module>passo_2</module>
+        <module>passo_3</module>
+        <module>passo_4</module>
+        <module>passo_5</module>
+        <module>passo_6</module>
+    </modules>
+</project>

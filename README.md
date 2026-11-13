@@ -172,15 +172,15 @@ void exemploDeEstruturaAAA() {
 
 ### Executando via Terminal (PowerShell / CMD / Bash)
 
-Cada pasta `passo_X` possui seu próprio `pom.xml` e pode ser executada de forma totalmente independente.
+O projeto já inclui o **Maven Wrapper (`mvnw` / `mvnw.cmd`)** tanto na raiz quanto dentro de cada pasta `passo_X`, além de um `pom.xml` agregador na raiz. Você pode usar tanto `mvn` (caso esteja no seu `PATH`) quanto `.\mvnw`.
 
-1. Abra o terminal na pasta raiz `codigo_tdd`.
-2. Entre na pasta do passo que deseja experimentar e execute `mvn clean test`:
+#### Opção 1: Executar um passo entrando na pasta dele
 
 ```powershell
 # Testando o Passo 0 (Sanity Check)
 cd passo_0
 mvn clean test
+# (ou .\mvnw clean test)
 
 # Testando o Passo 1 (Apenas CA5)
 cd ..\passo_1
@@ -207,10 +207,19 @@ cd ..\passo_6
 mvn clean test
 ```
 
-> **Dica para executar sem mudar de pasta:** Você também pode usar a flag `-f` do Maven a partir da raiz `codigo_tdd`:
-> ```powershell
-> mvn -f passo_6/pom.xml clean test
-> ```
+#### Opção 2: Executar a partir da raiz (`codigo_tdd`) sem mudar de diretório
+
+```powershell
+# Executar um passo específico usando -pl (Project List)
+mvn test -pl passo_6
+# ou com o Maven Wrapper:
+.\mvnw test -pl passo_6
+
+# Executar TODOS os passos (passo_0 até passo_6) de uma só vez
+mvn clean test
+# ou com o Maven Wrapper:
+.\mvnw clean test
+```
 
 ---
 
