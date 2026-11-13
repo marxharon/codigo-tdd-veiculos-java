@@ -19,4 +19,17 @@
         <module>passo_5</module>
         <module>passo_6</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>incluir-passos-erro</id>
+            <modules>
+                <module>passo_1_erro</module>
+                <module>passo_2_erro</module>
+                <module>passo_3_erro</module>
+                <module>passo_4_erro</module>
+                <module>passo_5_erro</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

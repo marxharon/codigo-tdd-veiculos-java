@@ -24,81 +24,93 @@ Uma revenda de automóveis precisa de um serviço para incluir veículos em seu 
 
 ## 2. Entendendo a Dinâmica do TDD (Ciclo Red-Green-Refactor)
 
-O desenvolvimento neste repositório foi dividido em **7 pastas independentes (`passo_0` a `passo_6`)**. Cada pasta representa uma fotografia da evolução do software após completar um ciclo do TDD:
+Para demonstrar fielmente o que deve ser implementado **primeiro** (o teste que falha) e o que vem **na sequência** (a implementação da regra), cada *baby step* foi dividido em dois diretórios:
 
-1. 🔴 **RED (Vermelho):** Escrevemos primeiro um teste automatizado para um pequeno comportamento que ainda não existe. O teste falha (ou nem compila).
-2. 🟢 **GREEN (Verde):** Escrevemos a quantidade mínima de código de produção necessária apenas para fazer o teste passar.
-3. 🔵 **REFACTOR (Refatoração):** Com a segurança dos testes passando, limpamos o código (extraímos métodos, constantes, melhoramos nomes e eliminamos duplicações) sem alterar o comportamento externo.
-
-> **Regra de Progressão (Baby Steps):** Só avançamos do `passo_N` para o `passo_N+1` quando todos os testes do passo atual estão passando (`100% verdes`).
+1. 🔴 **`passo_N_erro` (Fase RED — Vermelho):**
+   - Mantém o código de produção (`src/main/java`) exatamente como estava no passo anterior (`passo_N-1`), mas **adiciona o novo teste unitário** em `src/test/java`.
+   - Ao executar `mvn clean test` nesta pasta, o aluno vê na prática que todos os testes anteriores continuam passando, mas o novo teste **falha** (`BUILD FAILURE`), provando que a regra ainda não existe.
+2. 🟢 **`passo_N` (Fase GREEN — Verde):**
+   - Contém a implementação da regra de negócio no código de produção (`VeiculoService` / `VeiculoRepository`) para satisfazer o teste recém-criado.
+   - Ao executar `mvn clean test` nesta pasta, todos os testes passam (`BUILD SUCCESS`).
+3. 🔵 **`passo_6` (Fase REFACTOR — Refatoração Final):**
+   - Com todos os critérios cobertos pelos testes, refatoramos o design das classes de domínio (imutabilidade, encapsulamento, *Clean Code*) e organizamos a suíte de testes com `@Nested`.
 
 ---
 
-## 3. Explicação Didática de Cada Passo
+## 3. Explicação Didática de Cada Passo (Par `passo_N_erro` → `passo_N`)
 
 ### 📁 `passo_0` — Estágio Inicial: Preparação e *Sanity Check*
-- **O que este passo trata:** Antes de começar a programar regras de negócio, precisamos garantir que o projeto compila e que o motor de testes (JUnit 5) está funcionando.
-- **O que existe no código:** Apenas o arquivo de configuração do Maven (`pom.xml`) e uma classe de teste mínima (`AmbienteTest.java`) com um `assertTrue(true)`.
-- **Objetivo pedagógico:** Separar problemas de infraestrutura/configuração de problemas de lógica de programação. Se o `passo_0` roda, o ambiente está pronto para o TDD.
+- **O que este passo trata:** Garante que o projeto compila e que o motor de testes (JUnit 5) está funcionando antes de escrevermos qualquer regra de negócio.
+- **Resultado ao rodar `mvn clean test`:** `Tests run: 1, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_1` — Baby Step 1: O Caminho Feliz — Persistência e ID (CA5)
+### 🔴 `passo_1_erro` → 🟢 `passo_1` — Baby Step 1: O Caminho Feliz (CA5)
 - **O que este passo trata:** Atende ao **CA5** (cadastrar um veículo válido, gerar um `id` e guardá-lo no estoque).
-- **Por que começamos pelo CA5 e não pelo CA1?** Em TDD, começar pelo "caminho feliz" (*happy path*) ajuda a desenhar a estrutura básica da solução: quais classes precisamos? Qual é o nome do método principal? Quais parâmetros ele recebe e o que ele retorna?
-- **Evolução das classes:**
-  - `VeiculoServiceTest`: Testa o cadastro de um veículo válido e verifica se o `id` foi preenchido (`1L`) e se o veículo pode ser recuperado do repositório.
-  - `Veiculo`: Nasce com os atributos básicos (`id`, `placa`, `modelo`, `ano`, `preco`).
-  - `VeiculoRepository` e `InMemoryVeiculoRepository`: Surgem para armazenar os veículos em memória (simulando um banco de dados de forma rápida e isolada).
-  - `VeiculoService`: Possui apenas uma linha no método `cadastrar`: repassa o veículo diretamente para `repository.salvar(veiculo)`. Ainda não há nenhuma validação!
+- **1º — O que acontece em `passo_1_erro` (RED):**
+  - Escrevemos primeiro o teste `deveCadastrarVeiculoValidoGerandoIdentificadorEPersistindoNoEstoque()` em `VeiculoServiceTest`.
+  - Para o teste compilar, criamos apenas as cascas (*stubs*) de `Veiculo`, `VeiculoRepository`, `InMemoryVeiculoRepository` e `VeiculoService`, onde `cadastrar()` ainda devolve o veículo sem gerar `id` nem salvar.
+  - **Execução:** `Tests run: 1, Failures: 1` (`BUILD FAILURE` — falha na asserção `assertNotNull(cadastrado.getId())`).
+- **2º — O que acontece na sequência em `passo_1` (GREEN):**
+  - Implementamos a geração sequencial de ID (`sequenciaId++`) e o armazenamento no `Map` dentro de `InMemoryVeiculoRepository`, e fazemos `VeiculoService.cadastrar()` delegar para `repository.salvar(veiculo)`.
+  - **Execução:** `Tests run: 1, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_2` — Baby Step 2: Validação da Placa Mercosul (CA1)
-- **O que este passo trata:** Adiciona a primeira barreira de validação: rejeitar placas que não sigam o formato `AAA1A23` (ex.: placas no padrão antigo `ABC1234`, letras minúsculas `abc1d23`, placas com traço `ABC-1D23`, vazias ou nulas).
-- **Evolução das classes:**
-  - `RegraNegocioException`: Criada para representar erros de validação de domínio quando o atendente informa dados inválidos.
-  - `VeiculoServiceTest`: Mantém o teste do Passo 1 (garantindo que não quebramos o que já funcionava) e adiciona um teste parametrizado testando diversas placas inválidas.
-  - `VeiculoService`: Ganha o método privado `validarPlaca(String placa)` utilizando uma Expressão Regular (`^[A-Z]{3}[0-9][A-Z][0-9]{2}$`). Se a placa for inválida, lança `RegraNegocioException` antes de chamar o repositório.
+### 🔴 `passo_2_erro` → 🟢 `passo_2` — Baby Step 2: Validação da Placa Mercosul (CA1)
+- **O que este passo trata:** Rejeitar placas que não sigam o formato Mercosul `AAA1A23` (ex.: `ABC1234`, `abc1d23`, `ABC-1D23`, vazias ou nulas).
+- **1º — O que acontece em `passo_2_erro` (RED):**
+  - O `VeiculoService` continua idêntico ao do `passo_1` (sem validação de placa).
+  - Criamos a classe `RegraNegocioException` e adicionamos o teste parametrizado `naoDeveCadastrarVeiculoComPlacaForaDoPadraoMercosul` em `VeiculoServiceTest`, esperando que o serviço lance `RegraNegocioException` para 9 entradas inválidas.
+  - **Execução:** `Tests run: 10, Failures: 9` (`BUILD FAILURE` — o teste do CA5 passa, mas os 9 casos de placa inválida falham porque nenhuma exceção foi lançada).
+- **2º — O que acontece na sequência em `passo_2` (GREEN):**
+  - Adicionamos o método `validarPlaca(String placa)` com a Regex `^[A-Z]{3}[0-9][A-Z][0-9]{2}$` em `VeiculoService`.
+  - **Execução:** `Tests run: 10, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_3` — Baby Step 3: Validação do Ano do Veículo (CA2)
-- **O que este passo trata:** Garante que o veículo tenha um ano coerente: no mínimo `1900` e no máximo `ano atual + 1` (ex.: modelos do próximo ano já lançados).
-- **Conceito de Teste Aplicado:** **Análise de Valor Limite (Boundary Value Analysis)**. Testamos exatamente nas fronteiras:
-  - Fora do limite inferior (`1899` → deve falhar)
-  - Exatamente no limite inferior (`1900` → deve passar)
-  - Exatamente no limite superior (`anoAtual + 1` → deve passar)
-  - Fora do limite superior (`anoAtual + 2` → deve falhar)
-- **Evolução das classes:**
-  - `VeiculoService`: Ganha a constante `ANO_MINIMO = 1900` e o método `validarAno(int ano)`, utilizando `Year.now().getValue() + 1` para calcular dinamicamente o teto permitido.
+### 🔴 `passo_3_erro` → 🟢 `passo_3` — Baby Step 3: Validação do Ano do Veículo (CA2)
+- **O que este passo trata:** Garantir que o veículo tenha ano entre `1900` e `ano atual + 1` aplicando **Análise de Valor Limite**.
+- **1º — O que acontece em `passo_3_erro` (RED):**
+  - O `VeiculoService` ainda é o do `passo_2` (só valida placa).
+  - Adicionamos em `VeiculoServiceTest` os testes de fronteira: `1899` (deve falhar), `anoAtual + 2` (deve falhar) e os limites válidos `1900` e `anoAtual + 1` (devem passar).
+  - **Execução:** `Tests run: 13, Failures: 2` (`BUILD FAILURE` — os 2 testes de anos inválidos `1899` e `anoAtual + 2` falham pois o serviço ainda permite cadastrá-los).
+- **2º — O que acontece na sequência em `passo_3` (GREEN):**
+  - Implementamos `validarAno(int ano)` em `VeiculoService` verificando `ano < 1900 || ano > Year.now().getValue() + 1`.
+  - **Execução:** `Tests run: 13, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_4` — Baby Step 4: Validação de Preço Positivo (CA3)
-- **O que este passo trata:** Impede o cadastro de veículos sem preço (`null`), com preço zerado (`0.00`) ou negativo (`-0.01`, `-50000.00`).
-- **Evolução das classes:**
-  - `VeiculoServiceTest`: Adiciona testes específicos para preço `null`, zero e valores negativos.
-  - `VeiculoService`: Ganha o método `validarPreco(BigDecimal preco)`, que utiliza `preco.compareTo(BigDecimal.ZERO) <= 0` (forma correta em Java para comparar valores monetários com `BigDecimal`, evitando problemas de escala como `0` vs `0.00`).
+### 🔴 `passo_4_erro` → 🟢 `passo_4` — Baby Step 4: Validação de Preço Positivo (CA3)
+- **O que este passo trata:** Impedir o cadastro de veículos com preço `null`, zero (`0`, `0.00`) ou negativo (`-0.01`, `-50000.00`).
+- **1º — O que acontece em `passo_4_erro` (RED):**
+  - O `VeiculoService` ainda é o do `passo_3` (valida apenas placa e ano).
+  - Adicionamos em `VeiculoServiceTest` os 5 casos de teste para preços inválidos (`null`, `0`, `0.00`, `-0.01`, `-50000.00`).
+  - **Execução:** `Tests run: 18, Failures: 5` (`BUILD FAILURE` — todos os 13 testes anteriores passam, e exatamente os 5 novos testes de preço falham).
+- **2º — O que acontece na sequência em `passo_4` (GREEN):**
+  - Implementamos `validarPreco(BigDecimal preco)` em `VeiculoService` com `preco == null || preco.compareTo(BigDecimal.ZERO) <= 0`.
+  - **Execução:** `Tests run: 18, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_5` — Baby Step 5: Impedimento de Placa Duplicada (CA4)
-- **O que este passo trata:** Impede que dois veículos com a mesma placa sejam cadastrados no estoque.
-- **Evolução das classes:**
-  - `VeiculoServiceTest`: Cria um cenário onde cadastra um primeiro veículo com placa `"BRA2E19"` (com sucesso) e, em seguida, tenta cadastrar outro veículo com a mesma placa `"BRA2E19"`, esperando que o serviço lance `RegraNegocioException` e não salve o segundo registro.
-  - `VeiculoRepository` / `InMemoryVeiculoRepository`: Evoluem apenas agora (quando a necessidade real surgiu!) ganhando o método `boolean existePorPlaca(String placa)`.
-  - `VeiculoService`: Ganha o método `validarDuplicidadePlaca(String placa)`, posicionado estrategicamente **após** as validações de formato, ano e preço (evitando consultar o repositório caso os dados básicos já estejam inválidos).
+### 🔴 `passo_5_erro` → 🟢 `passo_5` — Baby Step 5: Impedimento de Placa Duplicada (CA4)
+- **O que este passo trata:** Impedir que dois veículos com a mesma placa sejam cadastrados no estoque.
+- **1º — O que acontece em `passo_5_erro` (RED):**
+  - O `VeiculoService` e o `VeiculoRepository` ainda são os do `passo_4`.
+  - Adicionamos o teste `naoDeveCadastrarVeiculoComPlacaDuplicada()` em `VeiculoServiceTest`, que cadastra a placa `"BRA2E19"` duas vezes e espera `RegraNegocioException` na segunda chamada.
+  - **Execução:** `Tests run: 19, Failures: 1` (`BUILD FAILURE` — os 18 testes anteriores passam, mas o 19º falha porque o segundo veículo duplicado foi salvo sem erro).
+- **2º — O que acontece na sequência em `passo_5` (GREEN):**
+  - Evoluímos `VeiculoRepository` e `InMemoryVeiculoRepository` com `existePorPlaca(String placa)` e adicionamos `validarDuplicidadePlaca` em `VeiculoService`.
+  - **Execução:** `Tests run: 19, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
-### 📁 `passo_6` — Estágio Final: Refatoração Limpa (Clean Code) e Suíte Completa
-- **O que este passo trata:** Com todos os critérios de aceitação (**CA1 a CA5**) atendidos e protegidos por testes, realizamos uma refatoração de consolidação tanto no código de produção quanto na suíte de testes.
-- **Evolução das classes:**
-  - `Veiculo`: Torna-se uma classe **imutável** (todos os campos `final`, sem `setId` aberto), utilizando o método `comId(Long novoId)` para gerar a instância persistida com segurança.
-  - `VeiculoRepository` / `InMemoryVeiculoRepository`: Ganham métodos de consulta complementares (`buscarPorPlaca`, `listarTodos`) para facilitar a inspeção completa do estoque.
-  - `VeiculoService`: Código altamente legível e autoexplicativo, incluindo validação contra objeto `veiculo` nulo.
-  - `VeiculoServiceTest`: Organizado em classes internas com `@Nested` (uma seção para cada Critério de Aceitação), servindo como uma **documentação viva** do sistema.
+### 🔵 `passo_6` — Estágio Final: Refatoração Limpa (Clean Code) e Suíte Completa
+- **O que este passo trata:** Com todos os critérios de aceitação (**CA1 a CA5**) atendidos e protegidos por testes, realizamos uma refatoração de consolidação tanto no código de produção quanto na suíte de testes:
+  - `Veiculo` torna-se **imutável** (campos `final` e método `comId(Long novoId)`).
+  - `VeiculoService` valida objetos nulos e apresenta métodos privados coesos.
+  - `VeiculoServiceTest` é organizado em classes internas `@Nested` (uma para cada Critério de Aceitação), expandindo os casos de borda para **31 execuções de teste**.
+- **Resultado ao rodar `mvn clean test`:** `Tests run: 31, Failures: 0` (`BUILD SUCCESS`).
 
 ---
 
@@ -257,16 +269,21 @@ Você verá no terminal uma saída semelhante a esta (exemplo do `passo_6`):
   - `BUILD SUCCESS`: Todos os testes passaram (`Failures: 0, Errors: 0`). Você está no **GREEN** e autorizado a refatorar ou avançar para o próximo passo!
   - `BUILD FAILURE`: Ao menos um teste falhou ou houve erro de compilação. O Maven exibirá logo acima exatamente qual método falhou, a linha do teste e a diferença entre o valor esperado e o valor obtido.
 
-### 6.3. Evolução do Número de Execuções de Teste por Passo
+### 6.3. Evolução do Número de Execuções de Teste por Passo (RED vs GREEN)
 
-Ao executar do `passo_0` ao `passo_6`, você observará o crescimento progressivo da rede de proteção da suíte de testes:
+Ao executar a sequência didática completa do `passo_0` ao `passo_6`, o aluno verá exatamente a alternância **RED (`BUILD FAILURE`) → GREEN (`BUILD SUCCESS`)**:
 
-| Diretório | Critérios Cobertos | Total de Execuções (`Tests run`) | Status Esperado |
-| :--- | :--- | :---: | :---: |
-| `passo_0` | Verificação de Ambiente | `1` | `BUILD SUCCESS` |
-| `passo_1` | CA5 | `1` | `BUILD SUCCESS` |
-| `passo_2` | CA5 + CA1 | `10` | `BUILD SUCCESS` |
-| `passo_3` | CA5 + CA1 + CA2 | `13` | `BUILD SUCCESS` |
-| `passo_4` | CA5 + CA1 + CA2 + CA3 | `18` | `BUILD SUCCESS` |
-| `passo_5` | CA5 + CA1 + CA2 + CA3 + CA4 | `19` | `BUILD SUCCESS` |
-| `passo_6` | CA1 a CA5 (Suíte Final Expandida com `@Nested`) | `31` | `BUILD SUCCESS` |
+| Diretório | Fase TDD | Critérios na Suíte | `Tests run` | `Failures` | Status Esperado no Maven |
+| :--- | :---: | :--- | :---: | :---: | :---: |
+| `passo_0` | Sanity Check | Verificação de Ambiente | `1` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_1_erro` | 🔴 **RED** | CA5 (Teste escrito antes do código) | `1` | `1` | 🔴 `BUILD FAILURE` |
+| `passo_1` | 🟢 **GREEN** | CA5 implementado | `1` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_2_erro` | 🔴 **RED** | CA5 + CA1 (Testes de placa adicionados) | `10` | `9` | 🔴 `BUILD FAILURE` |
+| `passo_2` | 🟢 **GREEN** | CA5 + CA1 implementado | `10` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_3_erro` | 🔴 **RED** | CA5 + CA1 + CA2 (Testes de ano adicionados) | `13` | `2` | 🔴 `BUILD FAILURE` |
+| `passo_3` | 🟢 **GREEN** | CA5 + CA1 + CA2 implementado | `13` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_4_erro` | 🔴 **RED** | CA5 + CA1 + CA2 + CA3 (Testes de preço adicionados) | `18` | `5` | 🔴 `BUILD FAILURE` |
+| `passo_4` | 🟢 **GREEN** | CA5 + CA1 + CA2 + CA3 implementado | `18` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_5_erro` | 🔴 **RED** | CA5 + CA1..CA3 + CA4 (Teste de duplicidade adicionado) | `19` | `1` | 🔴 `BUILD FAILURE` |
+| `passo_5` | 🟢 **GREEN** | CA5 + CA1..CA4 implementado | `19` | `0` | 🟢 `BUILD SUCCESS` |
+| `passo_6` | 🔵 **REFACTOR** | CA1 a CA5 (Refatorado + Suíte `@Nested`) | `31` | `0` | 🟢 `BUILD SUCCESS` |

@@ -57,18 +57,28 @@ Ao longo dos passos, o design emergirá gradualmente até atingir a seguinte res
 
 ---
 
-## 5. Organização do Diretório de Pastas
+## 5. Organização do Diretório de Pastas (Fluxo Completo RED → GREEN → REFACTOR)
+
+Para tornar o ciclo do TDD tangível aos alunos, cada regra de negócio possui **duas pastas sequenciais**:
+1. **`passo_N_erro` (Fase RED 🔴):** Contém o código de produção do passo anterior (`N-1`) + o **novo teste unitário escrito primeiro**. Ao rodar `mvn test`, o projeto compila, os testes antigos continuam passando, mas o teste novo **falha** (`BUILD FAILURE`).
+2. **`passo_N` (Fases GREEN 🟢 + REFACTOR 🔵):** Contém a evolução do código de produção implementando a regra de negócio para fazer o teste passar (`BUILD SUCCESS`).
 
 ```text
 codigo_tdd/
 ├── plano_projeto.md
-├── passo_0/  # Estágio inicial: esqueleto Maven + JUnit 5 configurado (Sanity Check)
-├── passo_1/  # Baby Step 1 (CA5): Fluxo feliz - Persistência e geração de identificador
-├── passo_2/  # Baby Step 2 (CA1): Validação do formato da placa Mercosul (AAA1A23)
-├── passo_3/  # Baby Step 3 (CA2): Validação do intervalo de ano (1900 até anoAtual + 1)
-├── passo_4/  # Baby Step 4 (CA3): Validação de preço maior que zero
-├── passo_5/  # Baby Step 5 (CA4): Impedimento de placa duplicada no estoque
-└── passo_6/  # Estágio Final: Consolidação, Refatoração Limpa (Clean Code) e Suíte Completa
+├── README.md
+├── passo_0/       # Estágio inicial: esqueleto Maven + JUnit 5 configurado (Sanity Check)
+├── passo_1_erro/  # [RED]   CA5: Teste de persistência e ID escrito ANTES da implementação (Falha: 1 de 1)
+├── passo_1/       # [GREEN] CA5: Implementação do fluxo feliz (Passa: 1 de 1)
+├── passo_2_erro/  # [RED]   CA1: Testes de placa Mercosul adicionados ao código do passo_1 (Falha: 9 de 10)
+├── passo_2/       # [GREEN] CA1: Validação do formato da placa Mercosul AAA1A23 (Passa: 10 de 10)
+├── passo_3_erro/  # [RED]   CA2: Testes de limites de ano adicionados ao código do passo_2 (Falha: 2 de 13)
+├── passo_3/       # [GREEN] CA2: Validação do intervalo de ano 1900 até anoAtual + 1 (Passa: 13 de 13)
+├── passo_4_erro/  # [RED]   CA3: Testes de preço <= 0 adicionados ao código do passo_3 (Falha: 5 de 18)
+├── passo_4/       # [GREEN] CA3: Validação de preço maior que zero (Passa: 18 de 18)
+├── passo_5_erro/  # [RED]   CA4: Teste de placa duplicada adicionado ao código do passo_4 (Falha: 1 de 19)
+├── passo_5/       # [GREEN] CA4: Impedimento de placa duplicada no estoque (Passa: 19 de 19)
+└── passo_6/       # [REFACTOR FINAL] Consolidação, imutabilidade, Clean Code e Suíte @Nested (Passa: 31 de 31)
 ```
 
 Cada pasta `passo_X/` possui a estrutura padrão Maven:
