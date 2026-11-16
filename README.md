@@ -20,6 +20,16 @@ Uma revenda de automóveis precisa de um serviço para incluir veículos em seu 
 - **CA4:** Não pode existir outro veículo no estoque com a mesma placa (proibir duplicidade).
 - **CA5:** Um cadastro válido deve receber um identificador único (`id`) e ficar persistido no estoque.
 
+### Diagrama de Classes (Modelo Contextual de Negócio)
+
+Para fins didáticos do projeto, o diagrama abaixo apresenta **somente o modelo contextual de classes de negócio** (`Veiculo`, `VeiculoRepository`, `InMemoryVeiculoRepository` e `VeiculoService`) concebido para representar a solução que atende à história de usuário apresentada, sem incluir classes de infraestrutura de testes, exceções ou detalhes de frameworks:
+
+- [Diagrama de Classes em Alta Definição (PNG)](./diagrama_classes.png)
+- [Diagrama de Classes Vetorial (SVG)](./diagrama_classes.svg)
+- [Especificação do Diagrama em Mermaid e PlantUML (Markdown)](./diagrama_classes.md)
+
+![Diagrama de Classes — Modelo Contextual de Negócio](./diagrama_classes.png)
+
 ---
 
 ## 2. Entendendo a Dinâmica do TDD (Ciclo Red-Green-Refactor)
